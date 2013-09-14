@@ -7,6 +7,8 @@ public class AlienAI : MonoBehaviour
 	public Renderer[] 	 	MeterSections;
 	public ConsoleReadout 	Console;
 	public SyncFeedback     Feedback;
+	public LowPassGlitch    Glitch;
+	public ChromaticGlitch  ChromaGlitch;
 	public string[] 		Planets;
 
 	public static int   MinFreq = 350;
@@ -31,6 +33,9 @@ public class AlienAI : MonoBehaviour
 	int   		m_processAnimIdx;
 	string[]	m_processAnim = new string[] { "#", "##", "###", "####", };
 
+	// what are we thinking about
+	string m_thinkString;
+
 	// which planet we are negotiating about
 	int   m_planetIdx;
 	// how long we wait for the player to get it right
@@ -47,37 +52,78 @@ public class AlienAI : MonoBehaviour
 		m_planetIdx = -1;
 		m_patience  = 120;
 
-		Configure();
+		transmitting = false;
+
+		m_thinkString = "EST COMM";
+		m_timer  	  = 4;
+
+		BeginThink();
+	}
+
+	void BeginThink()
+	{
+		m_thinkAnimTimer  = 1;
+		m_thinkAnimIdx    = 0;
+		Console.PushLine( m_thinkString + ": " + m_thinkAnim[0] );
 	}
 
 	void Configure()
 	{
-		Tone.oscil.Frequency = Random.Range(MinFreq, MaxFreq);
-		Tone.mod.Frequency   = Mathf.Round( Random.Range(MinMod, MaxMod)*10 ) / 10;
+		if ( m_patience > 0 )
+		{
+			if ( m_patience < 20 )
+			{
+				Console.PushLine( "WARNING!" );
+				Console.PushLine( "COMM BREAKDOWN IMMINENT!" );
+			}
 
-		m_duration  	  = m_timer = m_patience;
-		m_thinkAnimTimer  = 1;
-		m_thinkAnimIdx    = 0;
+			Tone.oscil.Frequency = Random.Range(MinFreq, MaxFreq);
+			Tone.mod.Frequency   = Mathf.Round( Random.Range(MinMod, MaxMod)*10 ) / 10;
 
-		m_planetIdx++;
+			m_duration  	  = m_timer = m_patience;
+			
+			m_planetIdx++;
+			Console.PushLine( "SYS: " + Planets[m_planetIdx] );
+			Console.PushLine( "POP: " + Random.Range( 7, 950 ) + "000000000" );
+			m_thinkString = "CALIBRATING";
+			BeginThink();
+			
+			transmitting = true;
+		}
+		else 
+		{
+			Glitch.LongGlitch();
+			ChromaGlitch.Break();
+			StartCoroutine( DeferredLevelLoad() );
+		}
+	}
 
-		Console.PushLine( Planets[m_planetIdx] + ": " + m_thinkAnim[0] );
+	IEnumerator DeferredLevelLoad()
+	{
+		yield return new WaitForSeconds(1);
 
-		transmitting = true;
+		Application.LoadLevel( "Main" );
 	}
 
 	void Fail()
 	{
-		Console.ReplaceLastLine( Planets[m_planetIdx] + ": WAR" );
-
-		m_patience -= 5;
+		if ( m_planetIdx >= 0 )
+		{
+			Console.ReplaceLastLine( "OUTCOME: WAR" );
+			m_patience -= 5;
+		}
+		else 
+		{
+			Console.PushLine( "COMM BEGIN" );
+			Console.PushLine( "XMIT WHEN SYNC'D" );
+		}
 
 		Configure();
 	}
 
 	void Success()
 	{
-		Console.ReplaceLastLine( Planets[m_planetIdx] + ": CEASE FIRE" );
+		Console.PushLine( "OUTCOME: CEASE FIRE" );
 		Configure();	
 	}
 
@@ -124,7 +170,7 @@ public class AlienAI : MonoBehaviour
 				if ( m_thinkAnimTimer <= 0 )
 				{
 					m_thinkAnimIdx = (m_thinkAnimIdx + 1) % m_thinkAnim.Length;
-					Console.ReplaceLastLine( Planets[m_planetIdx] + ": " + m_thinkAnim[m_thinkAnimIdx] );
+					Console.ReplaceLastLine( m_thinkString + ": " + m_thinkAnim[m_thinkAnimIdx] );
 
 					m_thinkAnimTimer = 1;
 				}
@@ -149,7 +195,7 @@ public class AlienAI : MonoBehaviour
 				}
 				else
 				{
-					Console.ReplaceLastLine( Planets[m_planetIdx] + ": " + m_processAnim[m_processAnimIdx] );
+					Console.ReplaceLastLine( "OUTCOME: " + m_processAnim[m_processAnimIdx] );
 					m_processAnimTimer = 0.5f;
 				}
 			}
@@ -179,7 +225,7 @@ public class AlienAI : MonoBehaviour
 		m_processAnimTimer = 0.5f;
 		m_processAnimIdx   = 0;
 
-		Console.PushLine( Planets[m_planetIdx] + ": " + m_processAnim[m_processAnimIdx] );
+		Console.PushLine( "OUTCOME: " + m_processAnim[m_processAnimIdx] );
 
 		transmitting = false;
 	}

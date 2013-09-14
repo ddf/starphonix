@@ -9,13 +9,27 @@ public class LowPassGlitch : MonoBehaviour
 	float m_timer;
 	float m_glitchTimer;
 
+
+	public void LongGlitch()
+	{
+		m_filter.cutoffFrequency = 9000;
+		renderer.enabled = true;
+	}
+
 	// Use this for initialization
 	void Start () 
 	{
 		m_filter = GetComponent<AudioLowPassFilter>();
 		m_defaultCutoff = m_filter.cutoffFrequency;
 
-		m_timer = 10;
+		Glitch();
+	}
+
+	void Glitch()
+	{
+		m_filter.cutoffFrequency = Random.Range( 4000, 8000 );
+		m_glitchTimer = Random.Range( 0.05f, 0.2f );
+		renderer.enabled = true;
 	}
 	
 	// Update is called once per frame
@@ -27,9 +41,7 @@ public class LowPassGlitch : MonoBehaviour
 
 			if ( m_timer <= 0 )
 			{
-				m_filter.cutoffFrequency = Random.Range( 4000, 8000 );
-				m_glitchTimer = Random.Range( 0.05f, 0.2f );
-				renderer.enabled = true;
+				Glitch();
 			}
 		}
 

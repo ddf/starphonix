@@ -10,6 +10,13 @@ public class ChromaticGlitch : MonoBehaviour
 
 	Lerper m_chromaLerp = new Lerper(EasingType.ExpoEaseOut);
 
+	public void Break()
+	{
+		m_defaultChroma = 50;
+		m_chromaLerp.Begin( 50, 75, 0.25f );
+		m_vignette.chromaticAberration = 50;
+	}
+
 	// Use this for initialization
 	void Start () 
 	{
