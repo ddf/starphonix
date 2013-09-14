@@ -6,14 +6,15 @@ public class CraftControl : MonoBehaviour
 	public ToneGenerator Alien;
 	public ToneGenerator Ship;
 
-	public TextMesh FreqDisplay;
-	public TextMesh RateDisplay;
+	public TextGlitch FreqDisplay;
+	public TextGlitch RateDisplay;
 
 	float m_timeToTrigger = 0.01f;
 
 	// Use this for initialization
 	void Start () 
 	{
+		Ship.oscil.Wave = new Square();
 	}
 	
 	// Update is called once per frame
@@ -50,7 +51,7 @@ public class CraftControl : MonoBehaviour
 			Ship.mod.Frequency = Mathf.Clamp( Ship.mod.Frequency + 0.1f, 0.1f, 4 );
 		}
 
-		FreqDisplay.text = ( Random.value > 0.1f ? Ship.oscil.Frequency + "" : "*x&#-" );
-		RateDisplay.text = ( Random.value > 0.1f ? Ship.mod.Frequency + "" : "*x&#-" );
+		FreqDisplay.Text = Ship.oscil.Frequency + "";
+		RateDisplay.Text = Ship.mod.Frequency.ToString("0.0");
 	}
 }

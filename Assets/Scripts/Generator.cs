@@ -3,14 +3,12 @@ using System.Collections;
 
 public class Generator : MonoBehaviour 
 {
-
-	// Use this for initialization
-	void Start () {
-	
-	}
+	public float value { get; protected set; }
 	
 	public virtual float Generate()
 	{
-		return 0;
+		value = 0;
+		
+		return value;
 	}
 }

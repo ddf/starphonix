@@ -13,7 +13,8 @@ public class ToneGenerator : MonoBehaviour
 		}
 	}
 
-	bool m_bGenerate;
+	bool 	m_bGenerate;
+	float[]	m_samples = new float[0];
 
 	void Start()
 	{
@@ -32,19 +33,39 @@ public class ToneGenerator : MonoBehaviour
 
 		audio.Play();
 	}
+
+	public float[] GetOutputData()
+	{
+		return m_samples;
+	}
 	
 	void OnAudioFilterRead ( float[] output, int channels ) 
 	{
+		int scount = output.Length / channels;
+		if ( m_samples.Length != scount )
+		{
+			m_samples = new float[scount];
+		}
+
 		if ( m_bGenerate )
 		{
-			int samples = output.Length / channels;
-
-			for( int i = 0; i < samples; ++i )
+			for( int i = 0; i < scount; ++i )
 			{
-				float s = oscil.Generate();
+				m_samples[i] = oscil.Generate();
 				for( int c = 0; c < channels; ++c )
 				{
-					output[i*channels + c] = s;
+					output[i*channels + c] = m_samples[i];
+				}
+			}
+		}
+		else
+		{
+			for( int i = 0; i < scount; ++i )
+			{
+				m_samples[i] = 0;
+				for( int c = 0; c < channels; ++c )
+				{
+					output[i*channels + c] = m_samples[i];
 				}
 			}
 		}

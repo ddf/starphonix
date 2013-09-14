@@ -62,7 +62,7 @@ public class Oscil : Generator
 		}
 
 		// calculate the sample value
-		float sample = outAmp * Wave.Value( tmpStep );
+		value = outAmp * Wave.Value( tmpStep );
 
 		// update our step size.
 		// this will check to make sure the frequency has changed.
@@ -86,6 +86,6 @@ public class Oscil : Generator
 			step -= (int)step;
 		}
 
-		return sample;
+		return value;
 	}
 }
