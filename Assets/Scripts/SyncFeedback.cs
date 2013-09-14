@@ -1,6 +1,13 @@
 using UnityEngine;
 using System.Collections;
 
+public enum SyncQuality
+{
+	Bad,
+	Acceptable,
+	Perfect
+}
+
 public class SyncFeedback : MonoBehaviour 
 {
 	public ToneGenerator Alien;
@@ -9,6 +16,12 @@ public class SyncFeedback : MonoBehaviour
 
 	static float FreqTolerance = 6;
 	static float ModTolerance  = 0.5f;
+
+
+	public SyncQuality state 
+	{
+		get; private set;
+	}
 
 	// Use this for initialization
 	void Start () 
@@ -33,15 +46,18 @@ public class SyncFeedback : MonoBehaviour
 			&&  WithinTolerance(Alien.mod.Frequency, Ship.mod.Frequency, 0.1f ) )
 		{
 			Render.material.color = Color.green;
+			state = SyncQuality.Perfect;
 		}
 		else if ( WithinTolerance(Alien.oscil.Frequency, Ship.oscil.Frequency, FreqTolerance) 
 			   && WithinTolerance(Alien.mod.Frequency, Ship.mod.Frequency, ModTolerance) )
 		{
 			Render.material.color = Color.yellow;
+			state = SyncQuality.Acceptable;
 		}
 		else
 		{
 			Render.material.color = Color.red;
+			state = SyncQuality.Bad;
 		}
 
 	}

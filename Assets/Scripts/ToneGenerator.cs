@@ -31,7 +31,17 @@ public class ToneGenerator : MonoBehaviour
 		oscil.Reset();
 		mod.Reset();
 
-		audio.Play();
+		audio.Play(0);
+	}
+
+	public void Stop()
+	{
+		audio.Stop();
+		m_bGenerate = false;
+		for( int i = 0; i < m_samples.Length; ++i )
+		{
+			m_samples[i] = 0;
+		}
 	}
 
 	public float[] GetOutputData()

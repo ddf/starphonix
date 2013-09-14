@@ -7,7 +7,7 @@ public class ConsoleReadout : MonoBehaviour
 	public int MaxLines = 10;
 
 	TextMesh 	  m_text;
-	Queue<string> m_lines = new Queue<string>();
+	List<string>  m_lines = new List<string>();
 
 	// Use this for initialization
 	void Start () 
@@ -17,13 +17,25 @@ public class ConsoleReadout : MonoBehaviour
 
 	public void PushLine( string input )
 	{
-		m_lines.Enqueue( input );
+		m_lines.Add( input );
 
 		if ( m_lines.Count > MaxLines )
 		{
-			m_lines.Dequeue();
+			m_lines.RemoveAt( 0 );
 		}
 
+		RefreshOutput();
+	}
+
+	public void ReplaceLastLine( string input )
+	{
+		m_lines[ m_lines.Count-1 ] = input;
+
+		RefreshOutput();
+	}
+
+	void RefreshOutput()
+	{
 		string output = "";
 		foreach( string line in m_lines )
 		{
@@ -36,9 +48,5 @@ public class ConsoleReadout : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
-		if ( Random.value < 0.1f )
-		{
-			PushLine( Random.Range( 12000.0f, 334954.0f ) + "" );
-		}
 	}
 }
