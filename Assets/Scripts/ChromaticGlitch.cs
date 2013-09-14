@@ -17,6 +17,12 @@ public class ChromaticGlitch : MonoBehaviour
 		m_vignette.chromaticAberration = 50;
 	}
 
+	public void War()
+	{
+		m_chromaLerp.Begin( 40, 55, 0.25f );
+		m_timer = 0;
+	}
+
 	// Use this for initialization
 	void Start () 
 	{
@@ -45,7 +51,14 @@ public class ChromaticGlitch : MonoBehaviour
 
 			if ( m_chromaLerp.done )
 			{
-				m_timer = Random.Range( 0.5f, 1.5f );
+				if ( m_chromaLerp.begin == 40 )
+				{
+					m_timer = 0.75f;
+				}
+				else
+				{
+					m_timer = Random.Range( 0.5f, 1.5f );
+				}
 			}
 		}
 

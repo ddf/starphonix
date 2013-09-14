@@ -16,6 +16,13 @@ public class LowPassGlitch : MonoBehaviour
 		renderer.enabled = true;
 	}
 
+	public void War()
+	{
+		m_filter.cutoffFrequency = 8500;
+		renderer.enabled = true;
+		m_glitchTimer    = 1;
+	}
+
 	// Use this for initialization
 	void Start () 
 	{

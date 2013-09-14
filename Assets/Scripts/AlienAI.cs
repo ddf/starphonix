@@ -5,6 +5,7 @@ public class AlienAI : MonoBehaviour
 {
 	public ToneGenerator 	Tone;
 	public Renderer[] 	 	MeterSections;
+	public TextGlitch 		MeterText;
 	public ConsoleReadout 	Console;
 	public SyncFeedback     Feedback;
 	public LowPassGlitch    Glitch;
@@ -109,7 +110,10 @@ public class AlienAI : MonoBehaviour
 	{
 		if ( m_planetIdx >= 0 )
 		{
+			Glitch.War();
+			ChromaGlitch.War();
 			Console.ReplaceLastLine( "OUTCOME: WAR" );
+			Console.PushLine( "CASUALTIES: " + Random.Range( 60, 101 ) + "%" );
 			m_patience -= 5;
 		}
 		else 
@@ -176,6 +180,11 @@ public class AlienAI : MonoBehaviour
 				}
 			}
 
+			if ( transmitting )
+			{
+				MeterText.Text = m_timer.ToString("000");
+			}
+
 			if ( m_timer <= 0 )
 			{
 				Fail();
@@ -224,6 +233,7 @@ public class AlienAI : MonoBehaviour
 		m_timer    = 0;
 		m_processAnimTimer = 0.5f;
 		m_processAnimIdx   = 0;
+		MeterText.Text = "###";
 
 		Console.PushLine( "OUTCOME: " + m_processAnim[m_processAnimIdx] );
 
