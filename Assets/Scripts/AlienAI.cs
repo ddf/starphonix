@@ -15,12 +15,14 @@ public class AlienAI : MonoBehaviour
 	public CameraMeltdown 	Meltdown;
 	public AudioSource 		ThinkSound;
 	public AudioSource 	    AcceptSound;
+	public AudioSource 		BeginNegoshSound;
 	public AudioClip[] 		WarScreams;
 	public AudioClip 		DeathScream;
 	public AudioClip		TruceScream;
 	public AudioClip 		PeaceScream;
 	public Color 			HappyColor;
 	public Color 			AngryColor;
+	public Color 			PeaceColor;
 	public string[] 		Planets;
 
 	public static int   MinFreq = 350;
@@ -58,7 +60,10 @@ public class AlienAI : MonoBehaviour
 	SyncQuality m_xmitSync;
 
 	Light 		m_light;
-	Lerper 		m_lightLerper = new Lerper(EasingType.ExpoEaseIn);
+	Lerper 		m_lightLerper 	 = new Lerper(EasingType.ExpoEaseIn);
+	Color 		m_lightColor;
+	Color 		m_lightColorTarget;
+	Lerper  	m_lightColorLerp = new Lerper(EasingType.BackEaseOut);
 
 	Vector3     m_startPos;
 	Vector3 	m_wanderTo;
@@ -68,19 +73,33 @@ public class AlienAI : MonoBehaviour
 
 	int 		m_screamIdx;
 
-	static float MAX_PATIENCE 		   = 180;
-	static int 	 MAX_FAILS     		   = 10;
-	static int   MAX_SUCCESS  		   = 10;
-	static int   MIN_SUCCESS_FOR_TRUCE = 4;
-	static int 	 MAX_FAILS_FOR_PEACE   = 4;
+	static float MAX_PATIENCE 		   = 100;
+
+	static float INACTION_PENALTY 	   = 10;
+	static float POOR_SYNC_PENALTY	   = 20;
+	static float PASS_SYNC_PENALTY	   = 6;
+	static float PERF_SYNC_PENALTY 	   = 2;
+
+	static int 	 MAX_FAILS     		   = 6;
+	static int   MAX_SUCCESS  		   = 6;
+	static int   MIN_SUCCESS_FOR_TRUCE = 2;
+	static int 	 MAX_FAILS_FOR_PEACE   = 2;
+
+	static int   TREATIES_WITH_FREQ_COLOR = 2;
+	static int   TREATIES_WITH_RATE_COLOR = 4;
 
 	int m_totalFails   = 0;
 	int m_totalSuccess = 0;
+
+	bool m_bNegotiationComplete;
 
 	// Use this for initialization
 	void Start () 
 	{
 		m_light = GetComponentInChildren<Light>();
+		m_lightColor = HappyColor;
+		m_light.color = HappyColor;
+
 		m_startPos = transform.position;
 		m_wanderTimer = 3;
 
@@ -148,26 +167,37 @@ public class AlienAI : MonoBehaviour
 					Console.PushLine( "COMM BREAKDOWN IMMINENT!" );
 				}
 
+				m_lightColor = m_light.color;
+				m_lightColorTarget = Color.Lerp( AngryColor, HappyColor, m_patience / MAX_PATIENCE );
+				m_lightColorLerp.Begin( 0, 1, 0.5f );
+
 				yield return new WaitForSeconds( waitFor );
 
 				Tone.oscil.Frequency = Random.Range(MinFreq, MaxFreq);
 				Tone.mod.Frequency   = Mathf.Round( Random.Range(MinMod, MaxMod)*10 ) / 10;
-
-				m_duration  	  = m_timer = m_patience;
 				
 				m_planetIdx++;
+				Console.PushLine( " " );
 				Console.PushLine( "SYS: " + Planets[m_planetIdx] );
 				Console.PushLine( "POP: " + Random.Range( 7, 950 ) + ".000.000.000" );
 				m_thinkString = "CALIBRATING";
 				BeginThink();
 
+				BeginNegoshSound.Play();
+
 				int treatiesCompleted = m_totalFails+m_totalSuccess;
 
-				Feedback.hideFreqColor = treatiesCompleted >= 4;
-				Feedback.hideRateColor = treatiesCompleted >= 8;
+				Feedback.hideFreqColor = treatiesCompleted >= TREATIES_WITH_FREQ_COLOR;
+				Feedback.hideRateColor = treatiesCompleted >= TREATIES_WITH_RATE_COLOR;
 				Feedback.glitchAmount  = Extensions.Map( treatiesCompleted, 0, MAX_FAILS + MAX_SUCCESS, 0.1f, 0.8f );
+
+				yield return new WaitForSeconds( 0.75f );
 				
 				transmitting = true;
+
+				m_duration = m_timer = m_patience;
+
+				print( "timer set to " + m_timer );				
 			}
 		}
 		// run out of patience always meltsdown
@@ -179,15 +209,25 @@ public class AlienAI : MonoBehaviour
 
 	void DoMeltdown()
 	{
+		m_bNegotiationComplete = true;
+
 		Glitch.LongGlitch();
 		ChromaGlitch.Break();
 		Meltdown.Trigger();
+
+		m_lightColor = m_light.color;
+		m_lightColorTarget = AngryColor;
+		m_lightLerper.Begin( 0, 1, 0.1f );
+
 		audio.PlayOneShot( DeathScream );
+
 		StartCoroutine( DeferredLevelLoad(DeathScream.length) );
 	}
 
 	void DoTruce()
 	{
+		m_bNegotiationComplete = true;
+
 		Glitch.War();
 		ChromaGlitch.War();
 
@@ -207,6 +247,12 @@ public class AlienAI : MonoBehaviour
 
 	void DoPeace()
 	{
+		m_bNegotiationComplete = true;
+
+		m_lightColor = m_light.color;
+		m_lightColorTarget = PeaceColor;
+		m_lightColorLerp.Begin( 0, 1, 1.0f );
+
 		audio.PlayOneShot( PeaceScream );
 
 		Flavor.Disconnect();
@@ -272,7 +318,7 @@ public class AlienAI : MonoBehaviour
 
 		m_totalSuccess++;
 
-		StartCoroutine( Configure(0.5f) );
+		StartCoroutine( Configure(1.0f) );
 	}
 
 	void RenderJudgement()
@@ -284,7 +330,7 @@ public class AlienAI : MonoBehaviour
 			// before the player reaches 10 failures.
 			case SyncQuality.Bad:
 			{
-				m_patience -= 30;
+				m_patience -= POOR_SYNC_PENALTY;
 				Fail();
 			}
 			break;
@@ -293,7 +339,7 @@ public class AlienAI : MonoBehaviour
 			// but it's not as bad as being ignored.
 			case SyncQuality.Acceptable:
 			{
-				m_patience -= 8;
+				m_patience -= PASS_SYNC_PENALTY;
 				Success();
 			}
 			break;
@@ -303,7 +349,7 @@ public class AlienAI : MonoBehaviour
 			// of a dent so difficulty ramps a bit
 			case SyncQuality.Perfect:
 			{
-				m_patience -= 5;
+				m_patience -= PERF_SYNC_PENALTY;
 				Success();
 			}
 			break;
@@ -317,7 +363,12 @@ public class AlienAI : MonoBehaviour
 		{
 			transform.localScale = Vector3.one + Vector3.one * Tone.mod.value * 0.25f;
 
-			m_light.color = Color.Lerp( AngryColor, HappyColor, m_patience / MAX_PATIENCE );
+			if ( !m_lightColorLerp.done )
+			{
+				m_lightColorLerp.Update();
+
+				m_light.color = Color.Lerp( m_lightColor, m_lightColorTarget, m_lightColorLerp.value );
+			}
 
 			if ( !m_lightLerper.done )
 			{
@@ -331,7 +382,8 @@ public class AlienAI : MonoBehaviour
 
 			transform.Rotate( new Vector3( 0.5f, 2, 0.2f ) * Time.deltaTime * rotSpeed );
 
-			if ( m_wanderTimer > 0 )
+			// don't wander again 
+			if ( !m_bNegotiationComplete && m_wanderTimer > 0 )
 			{
 				m_wanderTimer -= Time.deltaTime;
 
@@ -356,71 +408,76 @@ public class AlienAI : MonoBehaviour
 			}
 		}
 
-		if ( m_timer > 0 )
+		if ( !m_bNegotiationComplete )
 		{
-			m_timer -= Time.deltaTime;
-
-			if ( m_thinkAnimTimer > 0 )
+			if ( m_timer > 0 )
 			{
-				m_thinkAnimTimer -= Time.deltaTime;
+				m_timer -= Time.deltaTime;
 
-				if ( m_thinkAnimTimer <= 0 )
+				if ( m_thinkAnimTimer > 0 )
 				{
-					m_thinkAnimIdx = (m_thinkAnimIdx + 1) % m_thinkAnim.Length;
-					Console.ReplaceLastLine( m_thinkString + ": " + m_thinkAnim[m_thinkAnimIdx] );
-					ThinkSound.Play();
+					m_thinkAnimTimer -= Time.deltaTime;
 
-					m_thinkAnimTimer = 1;
+					if ( m_thinkAnimTimer <= 0 )
+					{
+						m_thinkAnimIdx = (m_thinkAnimIdx + 1) % m_thinkAnim.Length;
+						Console.ReplaceLastLine( m_thinkString + ": " + m_thinkAnim[m_thinkAnimIdx] );
+						ThinkSound.Play();
+
+						m_thinkAnimTimer = 1;
+					}
+				}
+
+				if ( transmitting )
+				{
+					MeterText.Text = m_timer.ToString("000");
+				}
+
+				if ( m_timer <= 0 )
+				{
+					if ( m_planetIdx < 0 )
+					{
+						StartCoroutine( Configure(1) );
+					}
+					else 
+					{
+						m_patience -= INACTION_PENALTY;
+						Fail();
+					}
 				}
 			}
 
-			if ( transmitting )
+			if ( m_processAnimTimer > 0 )
 			{
-				MeterText.Text = m_timer.ToString("000");
-			}
+				m_processAnimTimer -= Time.deltaTime;
 
-			if ( m_timer <= 0 )
-			{
-				// we start with 180 seconds
-				// so if the player fails 10 times in a row
-				// from not xmitting, then the alien
-				// should get pretty annoyed, but not 
-				// totally mad
-				m_patience -= 12;
-				Fail();
-			}
-		}
-
-		if ( m_processAnimTimer > 0 )
-		{
-			m_processAnimTimer -= Time.deltaTime;
-
-			if ( m_processAnimTimer <= 0 )
-			{
-				m_processAnimIdx++;
-				if ( m_processAnimIdx == m_processAnim.Length )
+				if ( m_processAnimTimer <= 0 )
 				{
-					RenderJudgement();
-				}
-				else
-				{
-					Console.ReplaceLastLine( "OUTCOME: " + m_processAnim[m_processAnimIdx] );
-					m_processAnimTimer = 0.5f;
-					ThinkSound.Play();
+					m_processAnimIdx++;
+					if ( m_processAnimIdx == m_processAnim.Length )
+					{
+						RenderJudgement();
+					}
+					else
+					{
+						Console.ReplaceLastLine( "OUTCOME: " + m_processAnim[m_processAnimIdx] );
+						m_processAnimTimer = 0.5f;
+						ThinkSound.Play();
+					}
 				}
 			}
-		}
 
-		int litPanels = (int)((MeterSections.Length+1) * (m_timer/m_duration));
-		for( int p = 0; p < MeterSections.Length; ++p )
-		{
-			if ( litPanels > p )
+			int litPanels = (int)((MeterSections.Length+1) * (m_timer/m_duration));
+			for( int p = 0; p < MeterSections.Length; ++p )
 			{
-				MeterSections[p].material.color = m_litColor;
-			}
-			else 
-			{
-				MeterSections[p].material.color = m_litColor * 0.4f;
+				if ( litPanels > p )
+				{
+					MeterSections[p].material.color = m_litColor;
+				}
+				else 
+				{
+					MeterSections[p].material.color = m_litColor * 0.4f;
+				}
 			}
 		}
 	}

@@ -130,7 +130,7 @@ public class CraftControl : MonoBehaviour
 				Alien.Tone.Trigger();
 				Ship.Trigger();
 
-				m_timeToTrigger = 6;
+				m_timeToTrigger = Ship.audio.clip.length + 1.0f;
 			}
 		}
 
