@@ -7,6 +7,14 @@ public class TextGlitch : MonoBehaviour
 	public string 	Text;
 	public float    Frequency;
 
+	public Color color 
+	{
+		set 
+		{
+			renderer.SetColor( value );
+		}
+	}
+
 	TextMesh m_text;
 
 	// Use this for initialization

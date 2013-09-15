@@ -14,13 +14,49 @@ public class SyncFeedback : MonoBehaviour
 	public ToneGenerator Ship;
 	public Renderer 	 Render;
 
-	static float FreqTolerance = 6;
-	static float ModTolerance  = 0.5f;
+	static float FreqTolerance = 10;
+	static float ModTolerance  = 0.8f;
 
 
 	public SyncQuality state 
 	{
 		get; private set;
+	}
+
+	public Color freqColor
+	{
+		get 
+		{
+			if ( WithinTolerance(Alien.oscil.Frequency, Ship.oscil.Frequency, 2 ) )
+			{
+				return Color.green;
+			}
+
+			if ( WithinTolerance(Alien.oscil.Frequency, Ship.oscil.Frequency, FreqTolerance) )
+			{
+				return Color.yellow;
+			}
+
+			return Color.red;
+		}
+	}
+
+	public Color rateColor
+	{
+		get 
+		{
+			if ( WithinTolerance(Alien.mod.Frequency, Ship.mod.Frequency, 0.1f ) )
+			{
+				return Color.green;
+			}
+
+			if ( WithinTolerance(Alien.mod.Frequency, Ship.mod.Frequency, ModTolerance) )
+			{
+				return Color.yellow;
+			}
+
+			return Color.red;
+		}
 	}
 
 	// Use this for initialization

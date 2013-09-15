@@ -175,6 +175,11 @@ public class AlienAI : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
+		// animation
+		{
+			transform.localScale = Vector3.one + Vector3.one * Tone.mod.value * 0.25f;
+		}
+
 		if ( m_timer > 0 )
 		{
 			m_timer -= Time.deltaTime;
