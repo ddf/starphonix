@@ -19,7 +19,8 @@ public class Intro : FlavorText
 	// Use this for initialization
 	IEnumerator Start () 
 	{
-		PushLine( "SYS//INIT" );
+		PushLine( "SYS//BOOT" );
+		PushLine( "XBIOS V3.10.2.51.9" );
 
 		yield return new WaitForSeconds( 9.5f );
 
