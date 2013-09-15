@@ -11,10 +11,13 @@ public class AlienAI : MonoBehaviour
 	public SyncFeedback     Feedback;
 	public LowPassGlitch    Glitch;
 	public ChromaticGlitch  ChromaGlitch;
+	public CameraMeltdown 	Meltdown;
 	public AudioSource 		ThinkSound;
 	public AudioSource 	    AcceptSound;
 	public AudioClip[] 		WarScreams;
 	public AudioClip 		DeathScream;
+	public Color 			HappyColor;
+	public Color 			AngryColor;
 	public string[] 		Planets;
 
 	public static int   MinFreq = 350;
@@ -54,18 +57,28 @@ public class AlienAI : MonoBehaviour
 	Light 		m_light;
 	Lerper 		m_lightLerper = new Lerper(EasingType.ExpoEaseIn);
 
+	Vector3     m_startPos;
+	Vector3 	m_wanderTo;
+	Vector3		m_wanderFrom;
+	float 		m_wanderTimer;
+	Lerper 		m_wanderLerp = new Lerper(EasingType.ExpoEaseInOut);
+
 	int 		m_screamIdx;
+
+	static float MAX_PATIENCE = 180;
 
 	// Use this for initialization
 	void Start () 
 	{
 		m_light = GetComponentInChildren<Light>();
+		m_startPos = transform.position;
+		m_wanderTimer = 3;
 
 		m_litColor = MeterSections[0].material.color;
 		Tone.oscil.Wave = new Square();
 		
 		m_planetIdx = -1;
-		m_patience  = 120;
+		m_patience  = MAX_PATIENCE;
 
 		transmitting = false;
 
@@ -113,6 +126,7 @@ public class AlienAI : MonoBehaviour
 		{
 			Glitch.LongGlitch();
 			ChromaGlitch.Break();
+			Meltdown.Trigger();
 			audio.PlayOneShot( DeathScream );
 			StartCoroutine( DeferredLevelLoad() );
 		}
@@ -201,11 +215,42 @@ public class AlienAI : MonoBehaviour
 		{
 			transform.localScale = Vector3.one + Vector3.one * Tone.mod.value * 0.25f;
 
+			m_light.color = Color.Lerp( AngryColor, HappyColor, m_patience / MAX_PATIENCE );
+
 			if ( !m_lightLerper.done )
 			{
 				m_lightLerper.Update();
 
 				m_light.intensity = m_lightLerper.value;
+			}
+
+			//float rotSpeed = Extensions.Map( m_patience, MAX_PATIENCE, 0, 1, 100 );
+			float rotSpeed = Easing.Expo.easeIn( 1 - m_patience/MAX_PATIENCE, 1, 200, 1 );
+
+			transform.Rotate( new Vector3( 0.5f, 2, 0.2f ) * Time.deltaTime * rotSpeed );
+
+			if ( m_wanderTimer > 0 )
+			{
+				m_wanderTimer -= Time.deltaTime;
+
+				if ( m_wanderTimer <= 0 )
+				{
+					m_wanderFrom = transform.position;
+					m_wanderTo   = m_startPos + new Vector3( Random.Range(-1,1), 0, Random.Range(-1,1) );
+					m_wanderLerp.Begin( 0, 1, 3.25f );
+				}
+			}
+
+			if ( !m_wanderLerp.done )
+			{
+				m_wanderLerp.Update();
+
+				transform.position = Extensions.Lerp( m_wanderFrom, m_wanderTo, m_wanderLerp.value );
+
+				if ( m_wanderLerp.done )
+				{
+					m_wanderTimer = 4;
+				}
 			}
 		}
 
