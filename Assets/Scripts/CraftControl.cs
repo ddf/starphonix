@@ -92,7 +92,7 @@ public class CraftControl : MonoBehaviour
 
 					currentValue = Mathf.Clamp( currentValue, m_minVal, m_maxVal );
 
-					m_timer = 0.15f;
+					m_timer = 0.1f;
 				}
 			}
 
@@ -139,9 +139,11 @@ public class CraftControl : MonoBehaviour
 
 		FreqDisplay.Text = Ship.oscil.Frequency + "";
 		FreqDisplay.color = Feedback.freqColor;
+		FreqDisplay.Frequency = Feedback.glitchAmount;
 
 		RateDisplay.Text = Ship.mod.Frequency.ToString("0.0");
 		RateDisplay.color = Feedback.rateColor;
+		RateDisplay.Frequency = Feedback.glitchAmount;
 
 		if ( Input.GetKeyDown("space") )
 		{

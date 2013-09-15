@@ -73,4 +73,11 @@ public class FlavorText : MonoBehaviour
 		PushLine( "COMM//SUB//TRANSMIT.EVAC" );
 		PushLine( "COMM//RE.INIT.LINK" );
 	}
+
+	public void Disconnect()
+	{
+		PushLine( "COMM//SIGNALLOST//STARPHONIX" );
+		PushLine( "COMM//SUB//TRASMIT.RENDEZVOUS" );
+		PushLine( "COMM//KILL.LINK" );
+	}
 }

@@ -9,6 +9,7 @@ public class AlienAI : MonoBehaviour
 	public ConsoleReadout 	Console;
 	public FlavorText 		Flavor;
 	public SyncFeedback     Feedback;
+	public CommLog 			CommLog;
 	public LowPassGlitch    Glitch;
 	public ChromaticGlitch  ChromaGlitch;
 	public CameraMeltdown 	Meltdown;
@@ -16,6 +17,8 @@ public class AlienAI : MonoBehaviour
 	public AudioSource 	    AcceptSound;
 	public AudioClip[] 		WarScreams;
 	public AudioClip 		DeathScream;
+	public AudioClip		TruceScream;
+	public AudioClip 		PeaceScream;
 	public Color 			HappyColor;
 	public Color 			AngryColor;
 	public string[] 		Planets;
@@ -65,7 +68,14 @@ public class AlienAI : MonoBehaviour
 
 	int 		m_screamIdx;
 
-	static float MAX_PATIENCE = 180;
+	static float MAX_PATIENCE 		   = 180;
+	static int 	 MAX_FAILS     		   = 10;
+	static int   MAX_SUCCESS  		   = 10;
+	static int   MIN_SUCCESS_FOR_TRUCE = 4;
+	static int 	 MAX_FAILS_FOR_PEACE   = 4;
+
+	int m_totalFails   = 0;
+	int m_totalSuccess = 0;
 
 	// Use this for initialization
 	void Start () 
@@ -86,6 +96,7 @@ public class AlienAI : MonoBehaviour
 		m_timer  	  = 4;
 
 		WarScreams.Shuffle();
+		Planets.Shuffle();
 
 		BeginThink();
 	}
@@ -101,40 +112,117 @@ public class AlienAI : MonoBehaviour
 	{
 		if ( m_patience > 0 )
 		{
-			if ( m_patience < 20 )
+			// if we failed to much, we will either meltdown 
+			// or temporarily cease hostilities
+			// depending on how many success there were
+			if ( m_totalFails == MAX_FAILS )
 			{
-				Console.PushLine( "WARNING!" );
-				Console.PushLine( "COMM BREAKDOWN IMMINENT!" );
+				if ( m_totalSuccess >= MIN_SUCCESS_FOR_TRUCE )
+				{
+					DoTruce();
+				}
+				else 
+				{
+					DoMeltdown();
+				}
 			}
+			// if the player succeed enough, we will either
+			// declare truce or declare peace
+			// depending on how much they failed
+			else if ( m_totalSuccess == MAX_SUCCESS )
+			{
+				if ( m_totalFails <= MAX_FAILS_FOR_PEACE )
+				{
+					DoPeace();
+				}
+				else 
+				{
+					DoTruce();
+				}
+			}
+			else 
+			{	
+				if ( m_patience < 20 )
+				{
+					Console.PushLine( "WARNING!" );
+					Console.PushLine( "COMM BREAKDOWN IMMINENT!" );
+				}
 
-			yield return new WaitForSeconds( waitFor );
+				yield return new WaitForSeconds( waitFor );
 
-			Tone.oscil.Frequency = Random.Range(MinFreq, MaxFreq);
-			Tone.mod.Frequency   = Mathf.Round( Random.Range(MinMod, MaxMod)*10 ) / 10;
+				Tone.oscil.Frequency = Random.Range(MinFreq, MaxFreq);
+				Tone.mod.Frequency   = Mathf.Round( Random.Range(MinMod, MaxMod)*10 ) / 10;
 
-			m_duration  	  = m_timer = m_patience;
-			
-			m_planetIdx++;
-			Console.PushLine( "SYS: " + Planets[m_planetIdx] );
-			Console.PushLine( "POP: " + Random.Range( 7, 950 ) + ".000.000.000" );
-			m_thinkString = "CALIBRATING";
-			BeginThink();
-			
-			transmitting = true;
+				m_duration  	  = m_timer = m_patience;
+				
+				m_planetIdx++;
+				Console.PushLine( "SYS: " + Planets[m_planetIdx] );
+				Console.PushLine( "POP: " + Random.Range( 7, 950 ) + ".000.000.000" );
+				m_thinkString = "CALIBRATING";
+				BeginThink();
+
+				int treatiesCompleted = m_totalFails+m_totalSuccess;
+
+				Feedback.hideFreqColor = treatiesCompleted >= 4;
+				Feedback.hideRateColor = treatiesCompleted >= 8;
+				Feedback.glitchAmount  = Extensions.Map( treatiesCompleted, 0, MAX_FAILS + MAX_SUCCESS, 0.1f, 0.8f );
+				
+				transmitting = true;
+			}
 		}
+		// run out of patience always meltsdown
 		else 
 		{
-			Glitch.LongGlitch();
-			ChromaGlitch.Break();
-			Meltdown.Trigger();
-			audio.PlayOneShot( DeathScream );
-			StartCoroutine( DeferredLevelLoad() );
+			DoMeltdown();
 		}
 	}
 
-	IEnumerator DeferredLevelLoad()
+	void DoMeltdown()
 	{
-		yield return new WaitForSeconds(2.075f);
+		Glitch.LongGlitch();
+		ChromaGlitch.Break();
+		Meltdown.Trigger();
+		audio.PlayOneShot( DeathScream );
+		StartCoroutine( DeferredLevelLoad(DeathScream.length) );
+	}
+
+	void DoTruce()
+	{
+		Glitch.War();
+		ChromaGlitch.War();
+
+		audio.PlayOneShot( TruceScream );
+
+		Flavor.Disconnect();
+		Console.PushLine( "COMM TERMINATED" );
+		Console.PushLine( "HOSTILITIES TEMPORARILY" );
+		Console.PushLine( "SUSPENDED");
+
+		m_wanderFrom = transform.position;
+		m_wanderTo   = m_startPos + new Vector3( 10, 30, 0.1f );
+		m_wanderLerp.Begin( 0, 1, 4 );
+
+		StartCoroutine( DeferredLevelLoad( 4 ) );
+	}
+
+	void DoPeace()
+	{
+		audio.PlayOneShot( PeaceScream );
+
+		Flavor.Disconnect();
+		Console.PushLine( "COMM TERMINATED" );
+		Console.PushLine( "PEACEFUL RESOLUTION" );
+
+		m_wanderFrom = transform.position;
+		m_wanderTo   = m_startPos + new Vector3( -15, 30, 0.1f );
+		m_wanderLerp.Begin( 0, 1, 4 );
+
+		StartCoroutine( DeferredLevelLoad( 4 ) );
+	}
+
+	IEnumerator DeferredLevelLoad( float waitFor )
+	{
+		yield return new WaitForSeconds(waitFor);
 
 		Application.LoadLevel( "Main" );
 	}
@@ -147,9 +235,10 @@ public class AlienAI : MonoBehaviour
 
 			Console.ReplaceLastLine( "OUTCOME: WAR" );
 			Console.PushLine( "CASUALTIES: " + Random.Range( 60, 101 ) + "%" );
-			m_patience -= 5;
+			m_totalFails++;
 
-			if ( m_patience > 0 )
+			// only do normal vfx and sound if we aren't going to trigger an endgame
+			if ( m_patience > 0 && m_totalFails < MAX_FAILS )
 			{
 				Glitch.War();
 				ChromaGlitch.War();
@@ -160,12 +249,15 @@ public class AlienAI : MonoBehaviour
 
 			m_lightLerper.Begin( 5, 0.84f, 1 );
 
+			CommLog.AddFailure();
+
 			StartCoroutine( Configure(1.2f) );
 		}
 		else 
 		{
 			Console.PushLine( "COMM BEGIN" );
-			Console.PushLine( "XMIT WHEN SYNC'D" );
+			Console.PushLine( "XMIT PASS/PERF SYNC" );
+			Console.PushLine( "DO NOT XMIT POOR SYNC!" );
 
 			StartCoroutine( Configure(0) );
 		}
@@ -176,6 +268,10 @@ public class AlienAI : MonoBehaviour
 		Flavor.Success();
 		Console.ReplaceLastLine( "OUTCOME: CEASE FIRE" );
 		AcceptSound.Play();
+		CommLog.AddSuccess();
+
+		m_totalSuccess++;
+
 		StartCoroutine( Configure(0.5f) );
 	}
 
@@ -184,24 +280,30 @@ public class AlienAI : MonoBehaviour
 		switch( m_xmitSync )
 		{
 			// if player transmits a bad sync it's even worse than just timing out
+			// transmitting bad syncs should cause the alien to lose patience
+			// before the player reaches 10 failures.
 			case SyncQuality.Bad:
 			{
-				m_patience -= 5;
+				m_patience -= 30;
 				Fail();
 			}
 			break;
 
+			// the alien still gets annoyed with this
+			// but it's not as bad as being ignored.
 			case SyncQuality.Acceptable:
 			{
-				// just a little miffed
-				m_patience -= 3;
+				m_patience -= 8;
 				Success();
 			}
 			break;
 
+			// and, finally, a perfect sync doesn't hurt
+			// much at all, but needs to put a bit 
+			// of a dent so difficulty ramps a bit
 			case SyncQuality.Perfect:
 			{
-				m_patience -= 1;
+				m_patience -= 5;
 				Success();
 			}
 			break;
@@ -279,6 +381,12 @@ public class AlienAI : MonoBehaviour
 
 			if ( m_timer <= 0 )
 			{
+				// we start with 180 seconds
+				// so if the player fails 10 times in a row
+				// from not xmitting, then the alien
+				// should get pretty annoyed, but not 
+				// totally mad
+				m_patience -= 12;
 				Fail();
 			}
 		}
