@@ -13,8 +13,7 @@ public class Intro : MonoBehaviour
 	// Use this for initialization
 	void Start () 
 	{
-		Console.PushLine( "_" );
-		m_outputTimer = 3;
+		m_outputTimer = 10.5f;
 	}
 	
 	// Update is called once per frame
@@ -28,11 +27,11 @@ public class Intro : MonoBehaviour
 			{
 				Console.ReplaceLastLine( Output[m_outputIndx] );
 				Console.PushLine( " " );
-				Console.PushLine( "_" );
 				m_outputIndx++;
 
 				if ( m_outputIndx < Output.Length )
 				{
+					Console.PushLine( "_" );
 					m_outputTimer = 0.5f;
 				}
 			}

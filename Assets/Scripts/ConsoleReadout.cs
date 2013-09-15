@@ -34,9 +34,15 @@ public class ConsoleReadout : MonoBehaviour
 
 	public void ReplaceLastLine( string input )
 	{
-		m_lines[ m_lines.Count-1 ] = input;
-
-		RefreshOutput();
+		if ( m_lines.Count > 0 )
+		{
+			m_lines[ m_lines.Count-1 ] = input;
+			RefreshOutput();
+		}
+		else 
+		{
+			PushLine( input );
+		}
 	}
 
 	void RefreshOutput()
