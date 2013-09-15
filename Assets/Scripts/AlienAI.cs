@@ -7,6 +7,7 @@ public class AlienAI : MonoBehaviour
 	public Renderer[] 	 	MeterSections;
 	public TextGlitch 		MeterText;
 	public ConsoleReadout 	Console;
+	public FlavorText 		Flavor;
 	public SyncFeedback     Feedback;
 	public LowPassGlitch    Glitch;
 	public ChromaticGlitch  ChromaGlitch;
@@ -68,7 +69,7 @@ public class AlienAI : MonoBehaviour
 		Console.PushLine( m_thinkString + ": " + m_thinkAnim[0] );
 	}
 
-	void Configure()
+	IEnumerator Configure( float waitFor )
 	{
 		if ( m_patience > 0 )
 		{
@@ -77,6 +78,8 @@ public class AlienAI : MonoBehaviour
 				Console.PushLine( "WARNING!" );
 				Console.PushLine( "COMM BREAKDOWN IMMINENT!" );
 			}
+
+			yield return new WaitForSeconds( waitFor );
 
 			Tone.oscil.Frequency = Random.Range(MinFreq, MaxFreq);
 			Tone.mod.Frequency   = Mathf.Round( Random.Range(MinMod, MaxMod)*10 ) / 10;
@@ -110,25 +113,34 @@ public class AlienAI : MonoBehaviour
 	{
 		if ( m_planetIdx >= 0 )
 		{
-			Glitch.War();
-			ChromaGlitch.War();
+			Flavor.Failure();
+
 			Console.ReplaceLastLine( "OUTCOME: WAR" );
 			Console.PushLine( "CASUALTIES: " + Random.Range( 60, 101 ) + "%" );
 			m_patience -= 5;
+
+			if ( m_patience > 0 )
+			{
+				Glitch.War();
+				ChromaGlitch.War();
+			}
+
+			StartCoroutine( Configure(1.2f) );
 		}
 		else 
 		{
 			Console.PushLine( "COMM BEGIN" );
 			Console.PushLine( "XMIT WHEN SYNC'D" );
-		}
 
-		Configure();
+			StartCoroutine( Configure(0) );
+		}
 	}
 
 	void Success()
 	{
+		Flavor.Success();
 		Console.PushLine( "OUTCOME: CEASE FIRE" );
-		Configure();	
+		StartCoroutine( Configure(0.5f) );
 	}
 
 	void RenderJudgement()
