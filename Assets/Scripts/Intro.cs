@@ -1,52 +1,132 @@
 using UnityEngine;
 using System.Collections;
 
-public class Intro : MonoBehaviour 
+public enum Program
 {
-	public ConsoleReadout Console;
-	public string[] 	  Output;
-	public float 		  OutputRate;
+	Boot,
+	Directory,
+	MissionInfo,
+	MissionAlpha,
+	MissionBeta,
+	MissionGamma,
+	MissionDelta
+}
 
-	float	m_outputTimer; 
-	int  	m_outputIndx;
+public class Intro : FlavorText 
+{
+	Program m_program = Program.Boot;
 
 	// Use this for initialization
-	void Start () 
+	IEnumerator Start () 
 	{
-		m_outputTimer = 10.5f;
+		PushLine( "SYS//INIT" );
+
+		yield return new WaitForSeconds( 9.5f );
+
+		RunProgram( Program.MissionAlpha );
 	}
 	
 	// Update is called once per frame
-	void Update () 
+	protected override void Update () 
 	{
-		if ( m_outputTimer > 0 )
+		base.Update();
+
+		if ( feedCount == 0 )
 		{
-			m_outputTimer -= Time.deltaTime;
-
-			if ( m_outputTimer <= 0 )
+			switch( m_program )
 			{
-				Console.ReplaceLastLine( Output[m_outputIndx] );
-				Console.PushLine( " " );
-				m_outputIndx++;
-
-				if ( m_outputIndx < Output.Length )
+				case Program.Directory:
 				{
-					Console.PushLine( "_" );
-					m_outputTimer = 0.5f;
+					if ( Input.GetKeyDown("1") )
+					{
+						RunProgram( Program.MissionAlpha );
+					}
+					else if ( Input.GetKeyDown("2") )
+					{
+						RunProgram( Program.MissionInfo );
+					}
 				}
+				break;
+
+				case Program.MissionInfo:
+				{
+					if ( Input.anyKeyDown )
+					{
+						RunProgram( Program.Directory );
+					}
+				}
+				break;
+
+				case Program.MissionAlpha:
+				{
+					if ( Input.GetKeyDown("y") )
+					{
+						Application.LoadLevel( "Alien" );
+					}
+					else if ( Input.GetKeyDown("n") )
+					{
+						RunProgram( Program.Directory );
+					}
+				}
+				break;
+
+				default: break;
 			}
+		}
+	}
+
+	void RunProgram( Program prg )
+	{
+		PushLine( "EXEC//" + prg.ToString().ToUpper() );
+
+		switch ( prg )
+		{
+			case Program.Directory:
+			{
+				PushLine( "DIR//CONTENTS" );
+				PushLine( "    1 - UNSSC_STARPHONIX.ALPHA.LOG");
+				PushLine( "    2 - UNSSC_STARPHONIX.INFO" );
+				//PushLine( "2 - UNSSC_STARPHONIX.BETA.LOG" );
+
+			}
+			break;
+
+			case Program.MissionAlpha:
+			{
+				PushLine( "SYS//NEGOTIATION//PROBELOG" );
+				PushLine( "SYS//SUB.NET//NEGOTIATION.LOG.BLACKBOX" );
+				PushLine( "SYS//ID//UNSSC_STARPHONIX" );
+				PushLine( "    QUERY//ID" );
+				PushLine( "    //DES.SONICNEGOTIATIONPROBEMODULE.WARPHASE/TREATY");
+				PushLine( "SYS//ID//UNSSC STARPHONIX//LOGFEED" );
+				PushLine( "SYS//INIT//LAZARUS//UNSSC_STARPHONIX//LOGFEED" );
+				PushLine( "SYS//INIT//REPLAY" );
+				PushLine( "Y or N" );
+			}
+			break;
+
+			case Program.MissionInfo:
+			{
+				PushLine( "SYS//ID//PROTOCOL_FRENZY" );
+				PushLine( "    QUERY//ID" );
+				PushLine( "    //DES.MISSION.DIPLOMATICPROBE.TIMECRITICAL" );
+				PushLine( "SYS//ID//UNENG_ROYER" );
+				PushLine( "    QUERY//ID" );
+				PushLine( "    //DES.MISSION.DESIGNMODULE.FIRSTCLASS" );
+				PushLine( "SYS//ID//UNENG_DIFEDE" );
+				PushLine( "    QUERY//ID" );
+				PushLine( "    //DES.MISSION.FABRICATIONMODULE.FIRSTCLASS" );
+			}
+			break;
+
+			default:
+			{
+				PushLine( "SYS//ERROR//PROGRAM//UNRECOGNIZED");
+				RunProgram( Program.Directory );
+			}
+			break;
 		}
 
-		if ( m_outputIndx == Output.Length )
-		{
-			if ( Input.GetKeyDown("y") )
-			{
-				Application.LoadLevel( "Alien" );
-			}
-			else if ( Input.GetKeyDown("n") )
-			{
-				Application.Quit();
-			}
-		}
+		m_program = prg;
 	}
 }

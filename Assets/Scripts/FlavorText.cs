@@ -5,10 +5,19 @@ using System.Collections.Generic;
 public class FlavorText : MonoBehaviour 
 {
 	public ConsoleReadout Console;
+	public float 		  OutputRate = 0.3f;
 
 	Queue<string> m_feed = new Queue<string>();
 	float 		  m_feedTimer;
 	float 		  m_linkCheck;
+
+	protected int feedCount
+	{
+		get 
+		{
+			return m_feed.Count;
+		}
+	}
 
 	// Use this for initialization
 	void Start () 
@@ -21,7 +30,7 @@ public class FlavorText : MonoBehaviour
 		m_linkCheck = 5;
 	}
 
-	void Update()
+	protected virtual void Update()
 	{
 		if ( m_feedTimer > 0 )
 		{
@@ -33,7 +42,7 @@ public class FlavorText : MonoBehaviour
 
 				if ( m_feed.Count > 0 )
 				{
-					m_feedTimer = 0.3f;
+					m_feedTimer = OutputRate;
 				}
 			}
 		}
@@ -50,7 +59,7 @@ public class FlavorText : MonoBehaviour
 		}
 	}
 
-	void PushLine( string line )
+	protected void PushLine( string line )
 	{
 		m_feed.Enqueue( line );
 
