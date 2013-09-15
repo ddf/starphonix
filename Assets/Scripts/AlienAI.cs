@@ -11,6 +11,10 @@ public class AlienAI : MonoBehaviour
 	public SyncFeedback     Feedback;
 	public LowPassGlitch    Glitch;
 	public ChromaticGlitch  ChromaGlitch;
+	public AudioSource 		ThinkSound;
+	public AudioSource 	    AcceptSound;
+	public AudioClip[] 		WarScreams;
+	public AudioClip 		DeathScream;
 	public string[] 		Planets;
 
 	public static int   MinFreq = 350;
@@ -25,7 +29,9 @@ public class AlienAI : MonoBehaviour
 
 	public float m_duration;
 	public float m_timer;
-	Color m_litColor;
+
+
+	Color 	 	m_litColor;
 
 	float 		m_thinkAnimTimer;
 	int   		m_thinkAnimIdx;
@@ -45,9 +51,16 @@ public class AlienAI : MonoBehaviour
 	// what the judgement of latest transmission was
 	SyncQuality m_xmitSync;
 
+	Light 		m_light;
+	Lerper 		m_lightLerper = new Lerper(EasingType.ExpoEaseIn);
+
+	int 		m_screamIdx;
+
 	// Use this for initialization
 	void Start () 
 	{
+		m_light = GetComponentInChildren<Light>();
+
 		m_litColor = MeterSections[0].material.color;
 		Tone.oscil.Wave = new Square();
 		
@@ -58,6 +71,8 @@ public class AlienAI : MonoBehaviour
 
 		m_thinkString = "EST COMM";
 		m_timer  	  = 4;
+
+		WarScreams.Shuffle();
 
 		BeginThink();
 	}
@@ -88,7 +103,7 @@ public class AlienAI : MonoBehaviour
 			
 			m_planetIdx++;
 			Console.PushLine( "SYS: " + Planets[m_planetIdx] );
-			Console.PushLine( "POP: " + Random.Range( 7, 950 ) + "000000000" );
+			Console.PushLine( "POP: " + Random.Range( 7, 950 ) + ".000.000.000" );
 			m_thinkString = "CALIBRATING";
 			BeginThink();
 			
@@ -98,13 +113,14 @@ public class AlienAI : MonoBehaviour
 		{
 			Glitch.LongGlitch();
 			ChromaGlitch.Break();
+			audio.PlayOneShot( DeathScream );
 			StartCoroutine( DeferredLevelLoad() );
 		}
 	}
 
 	IEnumerator DeferredLevelLoad()
 	{
-		yield return new WaitForSeconds(1);
+		yield return new WaitForSeconds(2.075f);
 
 		Application.LoadLevel( "Main" );
 	}
@@ -123,7 +139,12 @@ public class AlienAI : MonoBehaviour
 			{
 				Glitch.War();
 				ChromaGlitch.War();
+
+				audio.PlayOneShot( WarScreams[m_screamIdx] );
+				m_screamIdx = (m_screamIdx+1) % WarScreams.Length;
 			}
+
+			m_lightLerper.Begin( 5, 0.84f, 1 );
 
 			StartCoroutine( Configure(1.2f) );
 		}
@@ -139,7 +160,8 @@ public class AlienAI : MonoBehaviour
 	void Success()
 	{
 		Flavor.Success();
-		Console.PushLine( "OUTCOME: CEASE FIRE" );
+		Console.ReplaceLastLine( "OUTCOME: CEASE FIRE" );
+		AcceptSound.Play();
 		StartCoroutine( Configure(0.5f) );
 	}
 
@@ -178,6 +200,13 @@ public class AlienAI : MonoBehaviour
 		// animation
 		{
 			transform.localScale = Vector3.one + Vector3.one * Tone.mod.value * 0.25f;
+
+			if ( !m_lightLerper.done )
+			{
+				m_lightLerper.Update();
+
+				m_light.intensity = m_lightLerper.value;
+			}
 		}
 
 		if ( m_timer > 0 )
@@ -192,6 +221,7 @@ public class AlienAI : MonoBehaviour
 				{
 					m_thinkAnimIdx = (m_thinkAnimIdx + 1) % m_thinkAnim.Length;
 					Console.ReplaceLastLine( m_thinkString + ": " + m_thinkAnim[m_thinkAnimIdx] );
+					ThinkSound.Play();
 
 					m_thinkAnimTimer = 1;
 				}
@@ -223,6 +253,7 @@ public class AlienAI : MonoBehaviour
 				{
 					Console.ReplaceLastLine( "OUTCOME: " + m_processAnim[m_processAnimIdx] );
 					m_processAnimTimer = 0.5f;
+					ThinkSound.Play();
 				}
 			}
 		}

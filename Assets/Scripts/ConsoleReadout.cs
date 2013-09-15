@@ -19,6 +19,11 @@ public class ConsoleReadout : MonoBehaviour
 	{
 		m_lines.Add( input );
 
+		if ( audio )
+		{
+			audio.Play();
+		}
+
 		if ( m_lines.Count > MaxLines )
 		{
 			m_lines.RemoveAt( 0 );

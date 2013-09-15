@@ -10,12 +10,110 @@ public class CraftControl : MonoBehaviour
 	public TextGlitch FreqDisplay;
 	public TextGlitch RateDisplay;
 
+	public AudioSource IncrementSound;
+	public AudioSource DecrementSound;
+
 	float m_timeToTrigger = 0.01f;
+
+	class ValueController
+	{
+		public static AudioSource IncrementSound;
+		public static AudioSource DecrementSound;
+
+		string m_decKey;
+		string m_incKey;
+
+		float m_minVal;
+		float m_maxVal;
+		float m_incVal;
+
+		enum Direction
+		{
+			Down,
+			Up,
+			None
+		} 
+
+		Direction m_direction;
+
+		float m_timer;
+
+		public ValueController( string decKey, string incKey, float minVal, float maxVal, float incVal )
+		{
+			m_decKey = decKey;
+			m_incKey = incKey;
+			m_minVal = minVal;
+			m_maxVal = maxVal;
+			m_incVal = incVal;
+			m_timer  = 0.01f;
+		}
+
+		public float Update( float currentValue )
+		{
+			if ( Input.GetKey(m_decKey) )
+			{
+				m_direction = Direction.Down;
+
+				if ( Input.GetKeyDown(m_decKey) )
+				{
+					m_timer = 0.01f;
+				}
+			}
+			else if ( Input.GetKey(m_incKey) )
+			{
+				m_direction = Direction.Up;
+
+				if ( Input.GetKeyDown(m_incKey) )
+				{
+					m_timer = 0.01f;
+				}
+			}
+			else
+			{
+				m_direction = Direction.None;
+			}
+
+			if ( m_timer > 0 )
+			{
+				m_timer -= Time.deltaTime;
+
+				if ( m_timer <= 0 )
+				{
+					if ( m_direction == Direction.Down && currentValue > m_minVal )
+					{
+						currentValue -= m_incVal;
+						DecrementSound.Play();
+					}
+					else if ( m_direction == Direction.Up && currentValue < m_maxVal )
+					{
+						currentValue += m_incVal;
+						IncrementSound.Play();
+					}
+
+					currentValue = Mathf.Clamp( currentValue, m_minVal, m_maxVal );
+
+					m_timer = 0.15f;
+				}
+			}
+
+			return currentValue;
+		}
+
+	}
+
+	ValueController	 	m_freqController;
+	ValueController   	m_rateController;
 
 	// Use this for initialization
 	void Start () 
 	{
 		Ship.oscil.Wave = new Square();
+
+		ValueController.IncrementSound = IncrementSound;
+		ValueController.DecrementSound = DecrementSound;
+
+		m_freqController = new ValueController( "q", "w", AlienAI.MinFreq - 10, AlienAI.MaxFreq + 10, 1 );
+		m_rateController = new ValueController( "a", "s", AlienAI.MinMod - 0.2f, AlienAI.MaxMod + 0.2f, 0.1f );
 	}
 	
 	// Update is called once per frame
@@ -36,25 +134,8 @@ public class CraftControl : MonoBehaviour
 			}
 		}
 
-		if ( Input.GetKey("q") )
-		{
-			Ship.oscil.Frequency -= 1;
-		}
-		else if ( Input.GetKey("w") )
-		{
-			Ship.oscil.Frequency += 1;
-		}
-
-		Ship.oscil.Frequency = Mathf.Clamp( Ship.oscil.Frequency, AlienAI.MinFreq - 10, AlienAI.MaxFreq + 10 );
-
-		if ( Input.GetKey("a") )
-		{
-			Ship.mod.Frequency = Mathf.Clamp( Ship.mod.Frequency - 0.1f, AlienAI.MinMod - 0.2f, AlienAI.MaxMod + 0.2f );
-		}
-		else if ( Input.GetKey("s") )
-		{
-			Ship.mod.Frequency = Mathf.Clamp( Ship.mod.Frequency + 0.1f, AlienAI.MinMod - 0.2f, AlienAI.MaxMod + 0.2f );
-		}
+		Ship.oscil.Frequency = m_freqController.Update( (int)Ship.oscil.Frequency );
+		Ship.mod.Frequency   = m_rateController.Update( Ship.mod.Frequency );
 
 		FreqDisplay.Text = Ship.oscil.Frequency + "";
 		FreqDisplay.color = Feedback.freqColor;
