@@ -9,7 +9,6 @@ public enum Program
 	MissionAlpha,
 	MissionBeta,
 	MissionGamma,
-	MissionDelta
 }
 
 public class Intro : FlavorText 
@@ -44,6 +43,14 @@ public class Intro : FlavorText
 					}
 					else if ( Input.GetKeyDown("2") )
 					{
+						RunProgram( Program.MissionBeta );
+					}
+					else if ( Input.GetKeyDown("3" ) )
+					{
+						RunProgram( Program.MissionGamma );
+					}
+					else if ( Input.GetKeyDown("4") )
+					{
 						RunProgram( Program.MissionInfo );
 					}
 				}
@@ -62,7 +69,42 @@ public class Intro : FlavorText
 				{
 					if ( Input.GetKeyDown("y") )
 					{
+						AlienAI.MAX_PATIENCE = 100;
+						AlienAI.TREATIES_WITH_FREQ_COLOR = 2;
+						AlienAI.TREATIES_WITH_RATE_COLOR = 4;
 						Application.LoadLevel( "Alien" );
+					}
+					else if ( Input.GetKeyDown("n") )
+					{
+						RunProgram( Program.Directory );
+					}
+				}
+				break;
+
+				case Program.MissionBeta:
+				{
+					if ( Input.GetKeyDown("y") )
+					{
+						AlienAI.MAX_PATIENCE = 80;
+						AlienAI.TREATIES_WITH_FREQ_COLOR = 1;
+						AlienAI.TREATIES_WITH_RATE_COLOR = 2;
+						Application.LoadLevel( "Alien" ); 
+					}
+					else if ( Input.GetKeyDown("n") )
+					{
+						RunProgram( Program.Directory );
+					}
+				}
+				break;
+
+				case Program.MissionGamma:
+				{
+					if ( Input.GetKeyDown("y") )
+					{
+						AlienAI.MAX_PATIENCE = 50;
+						AlienAI.TREATIES_WITH_FREQ_COLOR = 0;
+						AlienAI.TREATIES_WITH_RATE_COLOR = 0;
+						Application.LoadLevel( "Alien" ); 
 					}
 					else if ( Input.GetKeyDown("n") )
 					{
@@ -85,10 +127,10 @@ public class Intro : FlavorText
 			case Program.Directory:
 			{
 				PushLine( "DIR//CONTENTS" );
-				PushLine( "    1 - UNSSC_STARPHONIX.ALPHA.LOG");
-				PushLine( "    2 - UNSSC_STARPHONIX.INFO" );
-				//PushLine( "2 - UNSSC_STARPHONIX.BETA.LOG" );
-
+				PushLine( "    1 - UNSSC_STARPHONIX.ALPHA.LOG" );
+				PushLine( "    2 - UNSSC_STARPHONIX.BETA.LOG" );
+				PushLine( "    3 - UNSSC_STARPHONIX.GAMMA.LOG" );
+				PushLine( "    4 - UNSSC_STARPHONIX.INFO" );
 			}
 			break;
 
@@ -99,6 +141,37 @@ public class Intro : FlavorText
 				PushLine( "SYS//ID//UNSSC_STARPHONIX" );
 				PushLine( "    QUERY//ID" );
 				PushLine( "    //DES.SONICNEGOTIATIONPROBEMODULE.WARPHASE/TREATY");
+				PushLine( "    //DES.CODENAME.FIRSTENCOUNTER" );
+				PushLine( "SYS//ID//UNSSC STARPHONIX//LOGFEED" );
+				PushLine( "SYS//INIT//LAZARUS//UNSSC_STARPHONIX//LOGFEED" );
+				PushLine( "SYS//INIT//REPLAY" );
+				PushLine( "Y or N" );
+			}
+			break;
+
+			case Program.MissionBeta:
+			{
+				PushLine( "SYS//NEGOTIATION//PROBELOG" );
+				PushLine( "SYS//SUB.NET//NEGOTIATION.LOG.BLACKBOX" );
+				PushLine( "SYS//ID//UNSSC_STARPHONIX" );
+				PushLine( "    QUERY//ID" );
+				PushLine( "    //DES.SONICNEGOTIATIONPROBEMODULE.WARPHASE/TREATY");
+				PushLine( "    //DES.CODENAME.THREATASSESS" );
+				PushLine( "SYS//ID//UNSSC STARPHONIX//LOGFEED" );
+				PushLine( "SYS//INIT//LAZARUS//UNSSC_STARPHONIX//LOGFEED" );
+				PushLine( "SYS//INIT//REPLAY" );
+				PushLine( "Y or N" );
+			}
+			break;
+
+			case Program.MissionGamma:
+			{
+				PushLine( "SYS//NEGOTIATION//PROBELOG" );
+				PushLine( "SYS//SUB.NET//NEGOTIATION.LOG.BLACKBOX" );
+				PushLine( "SYS//ID//UNSSC_STARPHONIX" );
+				PushLine( "    QUERY//ID" );
+				PushLine( "    //DES.SONICNEGOTIATIONPROBEMODULE.WARPHASE/TREATY");
+				PushLine( "    //DES.CODENAME.LASTDITCH" );
 				PushLine( "SYS//ID//UNSSC STARPHONIX//LOGFEED" );
 				PushLine( "SYS//INIT//LAZARUS//UNSSC_STARPHONIX//LOGFEED" );
 				PushLine( "SYS//INIT//REPLAY" );
@@ -113,10 +186,12 @@ public class Intro : FlavorText
 				PushLine( "    //DES.MISSION.DIPLOMATICPROBE.TIMECRITICAL" );
 				PushLine( "SYS//ID//UNENG_ROYER" );
 				PushLine( "    QUERY//ID" );
-				PushLine( "    //DES.MISSION.DESIGNMODULE.FIRSTCLASS" );
+				PushLine( "    //DES.MISSION.DESIGNVISUSALS" );
+				PushLine( "    //SECURITY.MAGIC.ULTRA" );
 				PushLine( "SYS//ID//UNENG_DIFEDE" );
 				PushLine( "    QUERY//ID" );
-				PushLine( "    //DES.MISSION.FABRICATIONMODULE.FIRSTCLASS" );
+				PushLine( "    //DES.MISSION.CORESYSTEMSONICS" );
+				PushLine( "    //SECURITY.MAGIC.ULTRA" );
 			}
 			break;
 

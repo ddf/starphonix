@@ -73,20 +73,20 @@ public class AlienAI : MonoBehaviour
 
 	int 		m_screamIdx;
 
-	static float MAX_PATIENCE 		   = 100;
+	public static float MAX_PATIENCE 		   = 100;
 
-	static float INACTION_PENALTY 	   = 10;
-	static float POOR_SYNC_PENALTY	   = 20;
-	static float PASS_SYNC_PENALTY	   = 6;
-	static float PERF_SYNC_PENALTY 	   = 2;
+	public static float INACTION_PENALTY 	   = 10;
+	public static float POOR_SYNC_PENALTY	   = 20;
+	public static float PASS_SYNC_PENALTY	   = 6;
+	public static float PERF_SYNC_PENALTY 	   = 2;
 
-	static int 	 MAX_FAILS     		   = 6;
-	static int   MAX_SUCCESS  		   = 6;
-	static int   MIN_SUCCESS_FOR_TRUCE = 2;
-	static int 	 MAX_FAILS_FOR_PEACE   = 2;
+	public static int 	 MAX_FAILS     		   = 6;
+	public static int   MAX_SUCCESS  		   = 6;
+	public static int   MIN_SUCCESS_FOR_TRUCE = 2;
+	public static int 	 MAX_FAILS_FOR_PEACE   = 2;
 
-	static int   TREATIES_WITH_FREQ_COLOR = 2;
-	static int   TREATIES_WITH_RATE_COLOR = 4;
+	public static int   TREATIES_WITH_FREQ_COLOR = 2;
+	public static int   TREATIES_WITH_RATE_COLOR = 4;
 
 	int m_totalFails   = 0;
 	int m_totalSuccess = 0;
