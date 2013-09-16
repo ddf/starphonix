@@ -13,7 +13,8 @@ public enum Program
 
 public class Intro : FlavorText 
 {
-	Program m_program = Program.Boot;
+	Program m_program 	 = Program.Boot;
+	float   m_loadTimer;
 
 	// Use this for initialization
 	IEnumerator Start () 
@@ -58,7 +59,8 @@ public class Intro : FlavorText
 
 				case Program.MissionInfo:
 				{
-					if ( Input.anyKeyDown )
+					m_loadTimer -= Time.deltaTime;
+					if ( m_loadTimer <= 0 )
 					{
 						RunProgram( Program.Directory );
 					}
@@ -67,14 +69,18 @@ public class Intro : FlavorText
 
 				case Program.MissionAlpha:
 				{
-					if ( Input.GetKeyDown("y") )
+					m_loadTimer -= Time.deltaTime;
+					Console.ReplaceLastLine( "REPLAY IN " + Mathf.Ceil(m_loadTimer).ToString("0") + " SECONDS. PRESS Q TO ABORT." );
+					if ( m_loadTimer <= 0 )
 					{
-						AlienAI.MAX_PATIENCE = 100;
+						Console.ReplaceLastLine( "BEGINNING REPLAY..." );
+						AlienAI.MAX_PATIENCE = 180;
 						AlienAI.TREATIES_WITH_FREQ_COLOR = 2;
 						AlienAI.TREATIES_WITH_RATE_COLOR = 4;
 						Application.LoadLevel( "Alien" );
 					}
-					else if ( Input.GetKeyDown("n") )
+					
+					if ( Input.GetKeyDown("q") )
 					{
 						RunProgram( Program.Directory );
 					}
@@ -83,14 +89,18 @@ public class Intro : FlavorText
 
 				case Program.MissionBeta:
 				{
-					if ( Input.GetKeyDown("y") )
+					m_loadTimer -= Time.deltaTime;
+					Console.ReplaceLastLine( "REPLAY IN " + Mathf.Ceil(m_loadTimer).ToString("0") + " SECONDS. PRESS Q TO ABORT." );
+					if ( m_loadTimer <= 0 )
 					{
-						AlienAI.MAX_PATIENCE = 80;
+						Console.ReplaceLastLine( "BEGINNING REPLAY..." );
+						AlienAI.MAX_PATIENCE = 100;
 						AlienAI.TREATIES_WITH_FREQ_COLOR = 1;
 						AlienAI.TREATIES_WITH_RATE_COLOR = 2;
 						Application.LoadLevel( "Alien" ); 
 					}
-					else if ( Input.GetKeyDown("n") )
+
+					if ( Input.GetKeyDown("q") )
 					{
 						RunProgram( Program.Directory );
 					}
@@ -99,14 +109,18 @@ public class Intro : FlavorText
 
 				case Program.MissionGamma:
 				{
-					if ( Input.GetKeyDown("y") )
+					m_loadTimer -= Time.deltaTime;
+					Console.ReplaceLastLine( "REPLAY IN " + Mathf.Ceil(m_loadTimer).ToString("0") + " SECONDS. PRESS Q TO ABORT." );
+					if ( m_loadTimer <= 0 )
 					{
+						Console.ReplaceLastLine( "BEGINNING REPLAY..." );
 						AlienAI.MAX_PATIENCE = 50;
 						AlienAI.TREATIES_WITH_FREQ_COLOR = 0;
 						AlienAI.TREATIES_WITH_RATE_COLOR = 0;
 						Application.LoadLevel( "Alien" ); 
 					}
-					else if ( Input.GetKeyDown("n") )
+
+					if ( Input.GetKeyDown("q") )
 					{
 						RunProgram( Program.Directory );
 					}
@@ -145,7 +159,9 @@ public class Intro : FlavorText
 				PushLine( "SYS//ID//UNSSC STARPHONIX//LOGFEED" );
 				PushLine( "SYS//INIT//LAZARUS//UNSSC_STARPHONIX//LOGFEED" );
 				PushLine( "SYS//INIT//REPLAY" );
-				PushLine( "Y or N" );
+				PushLine( "REPLAY IN 5 SECONDS. PRESS Q TO ABORT." );
+
+				m_loadTimer = 5;
 			}
 			break;
 
@@ -160,7 +176,9 @@ public class Intro : FlavorText
 				PushLine( "SYS//ID//UNSSC STARPHONIX//LOGFEED" );
 				PushLine( "SYS//INIT//LAZARUS//UNSSC_STARPHONIX//LOGFEED" );
 				PushLine( "SYS//INIT//REPLAY" );
-				PushLine( "Y or N" );
+				PushLine( "REPLAY IN 5 SECONDS. PRESS Q TO ABORT." );
+
+				m_loadTimer = 5;
 			}
 			break;
 
@@ -175,7 +193,9 @@ public class Intro : FlavorText
 				PushLine( "SYS//ID//UNSSC STARPHONIX//LOGFEED" );
 				PushLine( "SYS//INIT//LAZARUS//UNSSC_STARPHONIX//LOGFEED" );
 				PushLine( "SYS//INIT//REPLAY" );
-				PushLine( "Y or N" );
+				PushLine( "REPLAY IN 5 SECONDS. PRESS Q TO ABORT." );
+
+				m_loadTimer = 5;
 			}
 			break;
 
@@ -186,12 +206,14 @@ public class Intro : FlavorText
 				PushLine( "    //DES.MISSION.DIPLOMATICPROBE.TIMECRITICAL" );
 				PushLine( "SYS//ID//UNENG_ROYER" );
 				PushLine( "    QUERY//ID" );
-				PushLine( "    //DES.MISSION.DESIGNVISUSALS" );
+				PushLine( "    //DES.MISSION.DESIGNVISUALS" );
 				PushLine( "    //SECURITY.MAGIC.ULTRA" );
 				PushLine( "SYS//ID//UNENG_DIFEDE" );
 				PushLine( "    QUERY//ID" );
 				PushLine( "    //DES.MISSION.CORESYSTEMSONICS" );
 				PushLine( "    //SECURITY.MAGIC.ULTRA" );
+
+				m_loadTimer = 2;
 			}
 			break;
 
@@ -199,6 +221,7 @@ public class Intro : FlavorText
 			{
 				PushLine( "SYS//ERROR//PROGRAM//UNRECOGNIZED");
 				RunProgram( Program.Directory );
+				prg = Program.Directory;
 			}
 			break;
 		}

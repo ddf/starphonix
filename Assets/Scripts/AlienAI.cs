@@ -82,7 +82,7 @@ public class AlienAI : MonoBehaviour
 
 	public static int 	 MAX_FAILS     		   = 6;
 	public static int   MAX_SUCCESS  		   = 6;
-	public static int   MIN_SUCCESS_FOR_TRUCE = 2;
+	public static int   MIN_SUCCESS_FOR_TRUCE  = 2;
 	public static int 	 MAX_FAILS_FOR_PEACE   = 2;
 
 	public static int   TREATIES_WITH_FREQ_COLOR = 2;
@@ -110,6 +110,13 @@ public class AlienAI : MonoBehaviour
 		m_patience  = MAX_PATIENCE;
 
 		transmitting = false;
+
+		Console.PushLine( "PROTOCOL: SONIC SYNC" );
+		Console.PushLine( "- TUNE FREQ AND RATE" );
+		Console.PushLine( "  TO SYNC SONICS" );
+		Console.PushLine( "- XMIT PASS/PERF SYNC" );
+		Console.PushLine( "- DO NOT XMIT POOR SYNC!" );
+		Console.PushLine( "" );
 
 		m_thinkString = "EST COMM";
 		m_timer  	  = 4;
@@ -180,7 +187,7 @@ public class AlienAI : MonoBehaviour
 				Console.PushLine( " " );
 				Console.PushLine( "SYS: " + Planets[m_planetIdx] );
 				Console.PushLine( "POP: " + Random.Range( 7, 950 ) + ".000.000.000" );
-				m_thinkString = "CALIBRATING";
+				m_thinkString = "TUNING";
 				BeginThink();
 
 				BeginNegoshSound.Play();
@@ -298,14 +305,6 @@ public class AlienAI : MonoBehaviour
 			CommLog.AddFailure();
 
 			StartCoroutine( Configure(1.2f) );
-		}
-		else 
-		{
-			Console.PushLine( "COMM BEGIN" );
-			Console.PushLine( "XMIT PASS/PERF SYNC" );
-			Console.PushLine( "DO NOT XMIT POOR SYNC!" );
-
-			StartCoroutine( Configure(0) );
 		}
 	}
 
@@ -437,6 +436,7 @@ public class AlienAI : MonoBehaviour
 				{
 					if ( m_planetIdx < 0 )
 					{
+						Console.ReplaceLastLine( "COMM BEGIN" );
 						StartCoroutine( Configure(1) );
 					}
 					else 
